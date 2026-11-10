@@ -1,0 +1,47 @@
+services:
+  load-balancer:
+    image: nginx:1.27-alpine
+    ports:
+      - "18005:80"
+    volumes:
+      - ./nginx/load-balancer.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - backend-1
+      - backend-2
+
+  backend-1:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./app/public:/var/www/public:ro
+      - ./nginx/backend-1.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php-1
+
+  backend-2:
+    image: nginx:1.27-alpine
+    volumes:
+      - ./app/public:/var/www/public:ro
+      - ./nginx/backend-2.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - php-2
+
+  php-1:
+    build: ./php
+    volumes:
+      - ./app:/var/www
+    environment:
+      INSTANCE_NAME: php-1
+    depends_on:
+      - redis
+
+  php-2:
+    build: ./php
+    volumes:
+      - ./app:/var/www
+    environment:
+      INSTANCE_NAME: php-2
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7.4-alpine
